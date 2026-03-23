@@ -1,0 +1,218 @@
+{% extends "tasks/base.html" %}
+{% block title %}Mano užduotys{% endblock %}
+
+{% block content %}
+{% with q=query|default:'' %}
+{% with q_enc=q|urlencode %}
+
+<div class="d-flex align-items-start justify-content-between gap-3 mb-3 flex-wrap">
+  <h1 class="h3 m-0">Mano užduotys</h1>
+  <div class="row g-3 mb-4">
+  <div class="col-12 col-md-4">
+    <div class="glass-card p-3 h-100">
+      <div class="text-muted small mb-1">
+        <i class="bi bi-list-check text-success me-1"></i>
+        Laukiančios užduotys
+      </div>
+      <div class="display-6 fw-semibold">
+        {{ total_pending }}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="glass-card p-3 h-100">
+      <div class="text-muted small mb-1">
+        <i class="bi bi-check2-circle text-primary me-1"></i>
+        Atliktos užduotys
+      </div>
+      <div class="display-6 fw-semibold">
+        {{ total_done }}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="glass-card p-3 h-100">
+      <div class="text-muted small mb-1">
+        <i class="bi bi-hourglass-split text-warning me-1"></i>
+        Vėluojančios užduotys
+      </div>
+      <div class="display-6 fw-semibold">
+        {{ total_overdue }}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+  <form method="get" class="m-0" style="min-width: 280px;">
+    <div class="input-group">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Ieškoti pagal pavadinimą...">
+      <button class="btn btn-outline-secondary" type="submit">Ieškoti</button>
+    </div>
+
+    {# išlaikom kitus filtrus kai ieškai #}
+    <input type="hidden" name="status" value="{{ status }}">
+    <input type="hidden" name="due" value="{{ due }}">
+    <input type="hidden" name="sort" value="{{ sort }}">
+    <input type="hidden" name="per_page" value="{{ per_page }}">
+  </form>
+</div>
+
+{# Filtrai / rūšiavimas / per_page #}
+<form method="get" class="d-flex gap-2 flex-wrap align-items-end mb-3">
+  <input type="hidden" name="q" value="{{ q }}">
+
+  <div>
+    <label class="form-label small mb-1">Statusas</label>
+    <select class="form-select form-select-sm" name="status">
+      <option value="" {% if not status %}selected{% endif %}>Visos</option>
+      <option value="pending" {% if status == "pending" %}selected{% endif %}>Neatliktos</option>
+      <option value="done" {% if status == "done" %}selected{% endif %}>Atliktos</option>
+    </select>
+  </div>
+
+  <div>
+    <label class="form-label small mb-1">Terminas</label>
+    <select class="form-select form-select-sm" name="due">
+      <option value="" {% if not due %}selected{% endif %}>Visi</option>
+      <option value="overdue" {% if due == "overdue" %}selected{% endif %}>Vėluoja</option>
+      <option value="today" {% if due == "today" %}selected{% endif %}>Šiandien</option>
+      <option value="week" {% if due == "week" %}selected{% endif %}>Šią savaitę</option>
+    </select>
+  </div>
+
+  <div>
+    <label class="form-label small mb-1">Rūšiavimas</label>
+    <select class="form-select form-select-sm" name="sort">
+      <option value="new" {% if sort == "new" %}selected{% endif %}>Naujausios</option>
+      <option value="old" {% if sort == "old" %}selected{% endif %}>Seniausios</option>
+      <option value="priority" {% if sort == "priority" %}selected{% endif %}>Pagal prioritetą</option>
+      <option value="due" {% if sort == "due" %}selected{% endif %}>Pagal terminą</option>
+    </select>
+  </div>
+
+
+  <button class="btn btn-sm btn-primary" type="submit">Taikyti</button>
+
+  <a class="btn btn-sm btn-outline-secondary" href="{% url 'tasks:task_list' %}">
+    Išvalyti
+  </a>
+
+  <a class="btn btn-sm btn-outline-danger ms-auto" href="{% url 'tasks:trash' %}">
+    Šiukšlinė
+  </a>
+</form>
+
+{% if tasks %}
+  <div class="list-group">
+    {% for t in tasks %}
+      <div class="list-group-item d-flex justify-content-between align-items-start gap-3">
+        <div class="me-3">
+          <div class="fw-semibold">
+            {% if t.is_done %}
+              <span class="badge text-bg-success me-2">Atlikta</span>
+            {% else %}
+              <span class="badge text-bg-warning me-2">Neatlikta</span>
+            {% endif %}
+            {{ t.title }}
+          </div>
+
+          {% if t.content %}
+          <div class="small text-secondary">
+            <i class="bi bi-chat-left-text me-1"></i>
+            <span class="fw-semibold">Aprašymas:</span>
+            {{ t.content }}
+          </div>
+          {% endif %}
+
+          <div class="text-muted small mt-1">
+            Sukurta: {{ t.created_at|date:"Y-m-d H:i" }}
+            {% if t.due_date %} • Terminas: {{ t.due_date|date:"Y-m-d" }}{% endif %}
+            • Prioritetas:
+            {% if t.priority == 3 %}<span class="badge text-bg-danger">Aukštas</span>
+            {% elif t.priority == 2 %}<span class="badge text-bg-primary">Vidutinis</span>
+            {% else %}<span class="badge text-bg-secondary">Žemas</span>{% endif %}
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap justify-content-end">
+          <form method="post" data-ajax-toggle="1" action="{% url 'tasks:task_toggle' t.pk %}" class="m-0">
+            {% csrf_token %}
+            <button class="btn btn-outline-secondary btn-sm" type="submit">
+              {% if t.is_done %}Atžymėti{% else %}Pažymėti atlikta{% endif %}
+            </button>
+          </form>
+
+          <a class="btn btn-outline-primary btn-sm" href="{% url 'tasks:task_edit' t.pk %}">
+            Redaguoti
+          </a>
+
+          <form method="post" action="{% url 'tasks:task_delete' t.pk %}" class="m-0"
+                onsubmit="return confirm('Perkelti į šiukšlinę?');">
+            {% csrf_token %}
+            <button class="btn btn-outline-danger btn-sm" type="submit">Trinti</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <nav class="mt-3">
+    <ul class="pagination pagination-sm mb-0 flex-wrap">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link"
+             href="?page={{ page_obj.previous_page_number }}&q={{ q_enc }}&status={{ status }}&due={{ due }}&sort={{ sort }}&per_page={{ per_page }}">«</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">«</span></li>
+      {% endif %}
+
+      <li class="page-item disabled">
+        <span class="page-link">Puslapis {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      </li>
+
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link"
+             href="?page={{ page_obj.next_page_number }}&q={{ q_enc }}&status={{ status }}&due={{ due }}&sort={{ sort }}&per_page={{ per_page }}">»</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">»</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+{% else %}
+  <div class="alert alert-info mb-0">Užduočių nėra.</div>
+{% endif %}
+
+<script>
+document.addEventListener("submit", async (e) => {
+  const form = e.target;
+  if (!form.matches("[data-ajax-toggle='1']")) return;
+
+  e.preventDefault();
+  const url = form.action;
+  const csrf = form.querySelector("input[name='csrfmiddlewaretoken']").value;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "X-Requested-With": "XMLHttpRequest",
+      "X-CSRFToken": csrf,
+    },
+  });
+
+  if (!res.ok) return location.reload();
+  location.reload();
+});
+</script>
+
+{% endwith %}
+{% endwith %}
+{% endblock %}

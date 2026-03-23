@@ -1,0 +1,18 @@
+{% extends "tasks/base.html" %}
+{% block title %}Užduočių atmintinė{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+  <h1 class="display-6 fw-semibold mb-3">Užduočių atmintinė</h1>
+  <p class="text-muted mb-4">
+    Tvarka galvoje prasideda nuo tvarkos darbuose.
+  Prisijunk ir paversk planus aiškiais veiksmais – nuo idėjos iki atliktos užduoties.
+  </p>
+
+  <div class="d-flex justify-content-center gap-2">
+    <a class="btn btn-primary" href="{% url 'tasks:login' %}">
+      Prisijungti
+    </a>
+  </div>
+</div>
+{% endblock %}

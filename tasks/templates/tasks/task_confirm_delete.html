@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Trinti užduotį{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card shadow-sm border-danger">
+      <div class="card-body">
+
+        <h1 class="h4 text-danger mb-3">Trinti užduotį</h1>
+
+        <p class="mb-4">
+          Ar tikrai nori ištrinti užduotį:
+          <strong>{{ task.title }}</strong>?
+        </p>
+
+        <div class="d-flex justify-content-between">
+          <a href="{% url 'tasks:task_list' %}" class="btn btn-outline-secondary">
+            Atšaukti
+          </a>
+
+          <form method="post" class="m-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+              Taip, trinti
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

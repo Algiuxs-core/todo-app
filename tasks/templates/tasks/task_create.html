@@ -1,0 +1,43 @@
+{% extends "tasks/base.html" %}
+{% block title %}Nauja užduotis{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <h1 class="h4 mb-3">Nauja užduotis</h1>
+
+    <form method="post" class="vstack gap-3" novalidate>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      <div>
+        <label class="form-label">Pavadinimas</label>
+        {{ form.title }}
+        {% for e in form.title.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div>
+        <label class="form-label">Aprašymas</label>
+        {{ form.content }}
+        {% for e in form.content.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="row g-2">
+        <div class="col-12 col-md-6">
+          <label class="form-label">Prioritetas</label>
+          {{ form.priority }}
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label">Terminas</label>
+          {{ form.due_date }}
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Sukurti</button>
+        <a class="btn btn-outline-secondary" href="{% url 'tasks:task_list' %}">Atšaukti</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
